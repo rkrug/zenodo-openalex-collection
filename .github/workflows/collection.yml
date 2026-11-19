@@ -31,8 +31,8 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    # Permissions come from the caller: `contents: write` to save data releases and
+    # commit the README (persist: true); read is enough for persist: false.
     concurrency:
       group: zenodo-openalex-collection-${{ github.repository }}
       cancel-in-progress: false
