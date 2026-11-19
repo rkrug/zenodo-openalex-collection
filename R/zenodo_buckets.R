@@ -1,7 +1,7 @@
 # Intervals [from, to) covering the config's range, in the size given by `interval`
 # (default month). NA = open end (from: before Zenodo's launch in 2013, to: until now).
 zenodo_buckets <- function(cfg) {
-  interval <- cfg$interval %||% "month"
+  interval <- zenodo_interval(cfg)
   if (interval == "all") {
     return(data.frame(bucket = "all", from = cfg$from %||% NA_character_,
                       to = cfg$to %||% NA_character_))

@@ -1,16 +1,22 @@
-# Manual test of the pipeline at the current commit, on a small range (test/config.yml).
+# Manual test of the pipeline at the current commit, on a small range (tests/config.yml).
 # Keeps nothing: no data releases, no README commit. Needs the two secrets in this repo.
 name: Test
 
 on:
   workflow_dispatch:
+    inputs:
+      full:
+        description: Re-download everything from Zenodo
+        type: boolean
+        default: false
 
 jobs:
   test:
     uses: ./.github/workflows/collection.yml
     with:
-      config: test/config.yml
+      config: tests/config.yml
       title: Test
       readme: README.test.md
       persist: false
+      full: ${{ inputs.full }}
     secrets: inherit

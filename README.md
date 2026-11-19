@@ -32,7 +32,10 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
      collection_name: My Community Zenodo
      from: ~                          # optional date range, see below
      to: ~
-     interval: month                  # month, quarter, year or all
+     interval: year                   # month, quarter, year or all
+     recheck:                         # optional thorough check
+       every: month                   # month, quarter or year
+       interval: month                # finer than interval
      access: private                  # private, shared_by_link or public
    ```
 
@@ -60,7 +63,8 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
    ```
 
    The secrets must be passed explicitly: `secrets: inherit` only works within the same
-   organisation. Optional inputs: `config` (default `config.yml`), `title`, `readme` (default `README.md`).
+   organisation. Optional inputs: `config` (default `config.yml`), `title`, `readme` (default `README.md`),
+   `full` (re-download everything; a checkbox on the Actions page in the template).
 
 4. **Add two repository secrets** (Settings → Secrets and variables → Actions):
 
@@ -84,12 +88,24 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
 
   | `interval` | Check (2013 to today) | A change re-downloads | Missed: addition + removal of the same number of versions within the same … |
   |---|---|---|---|
-  | `month` (default) | ~170 requests, ~6 min | that month | month |
+  | `month` | ~170 requests, ~6 min | that month | month |
   | `quarter` | ~56 requests, ~2 min | that quarter | quarter |
-  | `year` | ~14 requests, ~30 s | that year | year |
+  | `year` (default) | ~14 requests, ~30 s | that year | year |
   | `all` | 1 request | everything | range |
 
-  Use `year` or `all` for small communities that change rarely. Consecutive changed
+  Use `year` or `all` for small communities that change rarely.
+- **`recheck`** (optional): every `every` (month, quarter or year) the check counts in
+  the finer `recheck: interval` instead, and re-downloads the intervals containing a
+  changed finer interval. This catches changes that cancel out within an interval at
+  the cost of a longer run on those days. The date of the last recheck is kept with the
+  data (`output/<name>/zenodo_recheck.json`), so a failed recheck is repeated on the
+  next run. Without `recheck`, no thorough check is done.
+- **Full re-download**: Actions → *Update collections* → *Run workflow* → tick
+  *Re-download everything from Zenodo* (needs the `full` input from
+  [`template/update.yml`](template/update.yml) in your workflow). Scheduled runs never
+  re-download everything. Very large communities take longer than GitHub's 6-hour
+  limit; run those locally with `ZOC_FULL=true`.
+- Consecutive changed
   intervals are downloaded together (up to 10,000 records per query), at 100 records per
   request. Changing `interval` later re-downloads everything once.
 - **OpenAlex**: building the collection costs about one credit per 200 found works.
@@ -132,7 +148,9 @@ the same OpenAlex collection.
 
 ## Versions
 
-Callers reference `@v1`. Changes are developed on `main` and tested with the manual
+Callers reference `@v1`. Changes are developed on `main` and tested locally with
+`source("tests/run_local_test.R")` (from the repository root; uses the OpenAlex key
+`API_openalex_github_test`) and on GitHub with the manual
 [Test](.github/workflows/test.yml) workflow (a small range in a test collection; keeps no
 data). The `v1` tag is moved to a tested commit to release a change to all callers;
 changes that need something new from callers (e.g. a new config field) get `v2`.

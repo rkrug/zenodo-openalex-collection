@@ -5,7 +5,7 @@
 # folder first and replaces the old interval folders only when complete, so an interrupted
 # download leaves the old data intact. Intervals now empty are removed.
 fetch_zenodo <- function(cfg, changed, dir, limit = 10000) {
-  interval <- cfg$interval %||% "month"
+  interval <- zenodo_interval(cfg)
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   before <- zenodo_id_table(dir)
   unlink(list.files(dir, "[.]parquet$", full.names = TRUE)) # old flat layout

@@ -4,7 +4,12 @@ name: Update collections
 on:
   schedule:
     - cron: "0 0 * * *" # daily 00:00 UTC
-  workflow_dispatch:
+  workflow_dispatch: # "Run workflow" on the Actions page
+    inputs:
+      full:
+        description: Re-download everything from Zenodo
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -14,6 +19,7 @@ jobs:
     uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v1
     with:
       title: My Community OpenAlex Collections
+      full: ${{ inputs.full || false }}
     secrets:
       API_ZENODO_RO: ${{ secrets.API_ZENODO_RO }}
       API_OPENALEX_PERSONAL: ${{ secrets.API_OPENALEX_PERSONAL }}

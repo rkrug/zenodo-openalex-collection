@@ -10,3 +10,4 @@ README.test.md
 .RData
 .Rproj.user/
 .DS_Store
+tests/run/

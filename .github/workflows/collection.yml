@@ -18,6 +18,10 @@ on:
         description: File name of the generated README
         type: string
         default: README.md
+      full:
+        description: Re-download everything from Zenodo (manual runs)
+        type: boolean
+        default: false
       persist:
         description: Restore/save data releases and commit the README (false for tests)
         type: boolean
@@ -44,6 +48,7 @@ jobs:
       ZOC_CONFIG: ${{ inputs.config }}
       ZOC_TITLE: ${{ inputs.title }}
       ZOC_README: ${{ inputs.readme }}
+      ZOC_FULL: ${{ inputs.full }}
     steps:
       - uses: actions/checkout@v4
 

@@ -8,17 +8,26 @@
 #                   Keep each range below 300,000 deposits, so the collection can be
 #                   used as a filter in OpenAlex.
 # interval:         size of the intervals that are counted on Zenodo every run and
-#                   re-downloaded when their count changed: month (default), quarter,
-#                   year or all. Larger intervals mean fewer requests per check
+#                   re-downloaded when their count changed: month, quarter, year
+#                   (default) or all. Larger intervals mean fewer requests per check
 #                   (2013-today: month ~170, quarter ~56, year ~14, all 1), but larger
 #                   re-downloads; an addition and a removal with the same number of
 #                   versions in the same interval go unnoticed. Use year or all for
 #                   small communities that change rarely.
-# access:           private (default), shared_by_link or public
+# recheck:          optional thorough check: every `every` (month, quarter or year) the
+#                   check counts in the finer `interval` instead, and re-downloads the
+#                   intervals containing a changed finer interval. Catches changes that
+#                   cancel out within an interval. The date of the last recheck is kept
+#                   with the data, so a failed recheck is repeated on the next run.
+# access:           private (default), shared_by_link. public not yet supported and 
+#                   has to be done by OpenAlex
 my-community:
   zenodo_community: my-community
   collection_name: My Community Zenodo
   from: ~
   to: ~
-  interval: month   # moth, quarter, year or all. Missing or ~ is all
+  interval: year    # moth, quarter, year or all. Missing or ~ is year
+  recheck:          # optional, see above; needs an interval finer than `interval`,
+    every: month    # e.g. with interval: year
+    interval: month # moth, quarter, or year. Need to be smaller then the default interval above
   access: private   # private, shared_by_link. public not yet supported and has to be done by OpenAlex

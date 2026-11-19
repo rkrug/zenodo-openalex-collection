@@ -3,6 +3,9 @@ test:
   zenodo_community: ipbes
   collection_name: ZOC pipeline check
   from: 2026-10-01
-  interval: month # 2 months, downloaded together and split
+  interval: quarter
+  recheck: # due on every test run (tests keep no data)
+    every: month
+    interval: month
   to: ~
   access: private

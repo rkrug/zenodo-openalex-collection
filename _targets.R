@@ -12,9 +12,19 @@ dup <- \(x) unique(x[duplicated(x)])
 coll <- vapply(cfgs, \(x) x$collection_name %||% NA_character_, "")
 if (anyNA(coll)) stop("Missing collection_name in: ", toString(names(cfgs)[is.na(coll)]))
 if (length(d <- dup(coll))) stop("Duplicate collection_name: ", toString(d))
-bad <- Filter(\(x) !(x$interval %||% "month") %in% zenodo_intervals, cfgs)
+bad <- Filter(\(x) !zenodo_interval(x) %in% zenodo_intervals, cfgs)
 if (length(bad)) {
   stop("interval must be one of ", toString(zenodo_intervals), " in: ", toString(names(bad)))
+}
+# recheck: every = month, quarter or year; interval finer than the entry's interval
+rank <- \(x) match(x, zenodo_intervals)
+bad <- Filter(\(x) !is.null(x$recheck) && (
+  !isTRUE(x$recheck$every %in% c("month", "quarter", "year")) ||
+    !isTRUE(x$recheck$interval %in% zenodo_intervals) ||
+    rank(x$recheck$interval) >= rank(zenodo_interval(x))), cfgs)
+if (length(bad)) {
+  stop("recheck needs every (month, quarter or year) and an interval finer than the ",
+       "entry's interval in: ", toString(names(bad)))
 }
 
 mapped <- tar_map(

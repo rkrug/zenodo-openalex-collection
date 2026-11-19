@@ -14,6 +14,13 @@ write_readme <- function(cfgs, collection_dirs, file = Sys.getenv("ZOC_README", 
       file.path("output", name, paste0(cfg$collection_name, ".collection"), "_collection.json")
     )
     range <- paste(cfg$from %||% "start", "–", cfg$to %||% "now")
+    check <- zenodo_interval(cfg)
+    if (!is.null(cfg$recheck)) {
+      rc_file <- file.path("output", name, "zenodo_recheck.json")
+      last <- if (file.exists(rc_file)) jsonlite::read_json(rc_file)$date else "–"
+      check <- sprintf("%s; by %s every %s (last %s)", check, cfg$recheck$interval,
+                       cfg$recheck$every, last)
+    }
     ch_file <- file.path("output", name, "zenodo_changes.json")
     change <- if (file.exists(ch_file)) {
       ch <- jsonlite::read_json(ch_file)
@@ -21,8 +28,8 @@ write_readme <- function(cfgs, collection_dirs, file = Sys.getenv("ZOC_README", 
               ch$added_deposits, ch$removed_deposits, ch$added_records, ch$removed_records)
     } else "–"
     sprintf(
-      "| %s | [%s](https://zenodo.org/communities/%s) | %s | %d | %d | %d | %d | %s | [%s](%s) | %s |",
-      name, cfg$zenodo_community, cfg$zenodo_community, range,
+      "| %s | [%s](https://zenodo.org/communities/%s) | %s | %s | %d | %d | %d | %d | %s | [%s](%s) | %s |",
+      name, cfg$zenodo_community, cfg$zenodo_community, range, check,
       z$records, z$concepts, z$first, col$member_count, change,
       col$collection_id, col$collection_url, col$access
     )
@@ -36,8 +43,8 @@ write_readme <- function(cfgs, collection_dirs, file = Sys.getenv("ZOC_README", 
             format(Sys.time(), "%Y-%m-%d %H:%M", tz = "UTC"),
             proc.time()[["elapsed"]] / 60), # elapsed time of the R process running tar_make()
     "",
-    "| Config | Zenodo community | Created | Zenodo records (all versions) | Deposits with a version in range | Deposits first created in range | OpenAlex works | Last change on Zenodo | Collection | Access |",
-    "|---|---|---|---:|---:|---:|---:|---|---|---|",
+    "| Config | Zenodo community | Created | Check interval; recheck | Zenodo records (all versions) | Deposits with a version in range | Deposits first created in range | OpenAlex works | Last change on Zenodo | Collection | Access |",
+    "|---|---|---|---|---:|---:|---:|---:|---|---|---|",
     rows,
     "",
     "## How it works",
