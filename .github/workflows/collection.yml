@@ -34,7 +34,7 @@ on:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # pinned: stable image, most system libraries preinstalled
     # Permissions come from the caller: `contents: write` to save data releases and
     # commit the README (persist: true); read is enough for persist: false.
     concurrency:
