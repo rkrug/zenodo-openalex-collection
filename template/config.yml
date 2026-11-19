@@ -8,17 +8,20 @@
 #                   Keep each range below 300,000 deposits, so the collection can be
 #                   used as a filter in OpenAlex.
 # interval:         size of the intervals that are counted on Zenodo every run and
-#                   re-downloaded when their count changed: month, quarter, year
+#                   re-downloaded when their count changed: week, month, quarter, year
 #                   (default) or all. Larger intervals mean fewer requests per check
-#                   (2013-today: month ~170, quarter ~56, year ~14, all 1), but larger
+#                   (2013-today: week ~620, month ~170, quarter ~56, year ~14, all 1), but larger
 #                   re-downloads; an addition and a removal with the same number of
 #                   versions in the same interval go unnoticed. Use year or all for
 #                   small communities that change rarely.
-# recheck:          optional thorough check: every `every` (month, quarter or year) the
-#                   check counts in the finer `interval` instead, and re-downloads the
-#                   intervals containing a changed finer interval. Catches changes that
-#                   cancel out within an interval. The date of the last recheck is kept
-#                   with the data, so a failed recheck is repeated on the next run.
+# recheck:          optional thorough check in a finer `interval`; re-downloads the
+#                   intervals overlapping a changed finer interval. Catches changes that
+#                   cancel out within an interval. Exactly one of:
+#                   per_run: n  rolling: each run rechecks the next n finer intervals
+#                               in chronological order (recommended)
+#                   every: week|month|quarter|year  all finer intervals at once when due
+#                               (use with caution: long runs on those days)
+#                   The state is kept with the data, so a failed recheck is repeated.
 # access:           private (default), shared_by_link. public not yet supported and 
 #                   has to be done by OpenAlex
 my-community:
@@ -27,7 +30,10 @@ my-community:
   from: ~
   to: ~
   interval: year    # moth, quarter, year or all. Missing or ~ is year
-  recheck:          # optional, see above; needs an interval finer than `interval`,
-    every: month    # e.g. with interval: year
-    interval: month # moth, quarter, or year. Need to be smaller then the default interval above
+  recheck:          # optional, see above; needs an interval finer than `interval`
+    interval: month # week, month, quarter or year; finer than `interval` above
+    # exactly one of the following two:
+    per_run: 2      # rolling: 2 months per run, in chronological order (recommended)
+    # every: month  # full: all months at once every week|month|quarter|year
+    #               # (use with caution: long runs on those days)
   access: private   # private, shared_by_link. public not yet supported and has to be done by OpenAlex

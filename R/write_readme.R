@@ -3,13 +3,12 @@ write_readme <- function(cfgs, collection_dirs, file = Sys.getenv("ZOC_README", 
                          title = Sys.getenv("ZOC_TITLE", "OpenAlex Collections")) {
   rows <- vapply(names(cfgs), \(name) {
     cfg <- cfgs[[name]]
-    z <- arrow::open_dataset(file.path("output", name, "zenodo")) |>
-      dplyr::summarise(
-        records = dplyr::n(),
-        concepts = dplyr::n_distinct(conceptdoi),
-        first = sum(version_index == 0, na.rm = TRUE)
-      ) |>
-      dplyr::collect()
+    d <- zenodo_id_table(file.path("output", name, "zenodo"),
+                         c("conceptdoi", "doi", "version_index"))
+    dep <- zenodo_deposit(d$conceptdoi, d$doi)
+    first <- is.na(d$version_index) | d$version_index == 0
+    z <- list(records = nrow(d), concepts = length(unique(dep)),
+              first = length(unique(dep[first])))
     col <- jsonlite::read_json(
       file.path("output", name, paste0(cfg$collection_name, ".collection"), "_collection.json")
     )
@@ -17,9 +16,15 @@ write_readme <- function(cfgs, collection_dirs, file = Sys.getenv("ZOC_README", 
     check <- zenodo_interval(cfg)
     if (!is.null(cfg$recheck)) {
       rc_file <- file.path("output", name, "zenodo_recheck.json")
-      last <- if (file.exists(rc_file)) jsonlite::read_json(rc_file)$date else "–"
-      check <- sprintf("%s; by %s every %s (last %s)", check, cfg$recheck$interval,
-                       cfg$recheck$every, last)
+      st <- if (file.exists(rc_file)) jsonlite::read_json(rc_file) else list()
+      check <- if (!is.null(cfg$recheck$per_run)) {
+        sprintf("%s; rolling recheck by %s, %d per run (last %s on %s)", check,
+                cfg$recheck$interval, as.integer(cfg$recheck$per_run),
+                st$last %||% "–", st$date %||% "–")
+      } else {
+        sprintf("%s; by %s every %s (last %s)", check, cfg$recheck$interval,
+                cfg$recheck$every, st$date %||% "–")
+      }
     }
     ch_file <- file.path("output", name, "zenodo_changes.json")
     change <- if (file.exists(ch_file)) {

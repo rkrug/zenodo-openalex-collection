@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   update:
-    uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v1
+    uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v2
     with:
       title: My Community OpenAlex Collections
       full: ${{ inputs.full || false }}

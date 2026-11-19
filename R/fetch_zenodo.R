@@ -7,7 +7,8 @@
 fetch_zenodo <- function(cfg, changed, dir, limit = 10000) {
   interval <- zenodo_interval(cfg)
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
-  before <- zenodo_id_table(dir)
+  ids <- c("id", "conceptdoi", "doi")
+  before <- zenodo_id_table(dir, ids)
   unlink(list.files(dir, "[.]parquet$", full.names = TRUE)) # old flat layout
   tmp_root <- paste0(dir, ".tmp")
   unlink(tmp_root, recursive = TRUE)
@@ -48,16 +49,19 @@ fetch_zenodo <- function(cfg, changed, dir, limit = 10000) {
   }
   unlink(tmp_root, recursive = TRUE)
 
-  after <- zenodo_id_table(dir)
+  after <- zenodo_id_table(dir, ids)
   stopifnot(!anyDuplicated(after$id))
-  # Last change (kept until the next change): deposits = concept DOIs, records = versions
+  # Last change (kept until the next change): deposits = concept DOIs (or record DOIs
+  # without one), records = versions
   if (nrow(changed)) {
     n <- \(a, b) length(setdiff(unique(a), unique(b)))
+    dep_before <- zenodo_deposit(before$conceptdoi, before$doi)
+    dep_after <- zenodo_deposit(after$conceptdoi, after$doi)
     jsonlite::write_json(
       list(
         date = format(Sys.time(), "%Y-%m-%d %H:%M", tz = "UTC"),
-        added_deposits = n(after$conceptdoi, before$conceptdoi),
-        removed_deposits = n(before$conceptdoi, after$conceptdoi),
+        added_deposits = n(dep_after, dep_before),
+        removed_deposits = n(dep_before, dep_after),
         added_records = n(after$id, before$id),
         removed_records = n(before$id, after$id)
       ),

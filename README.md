@@ -8,9 +8,11 @@ that runs in **your** repository.
 
 - All versions of all deposits in the community are downloaded from Zenodo.
 - The OpenAlex collection is built from the **concept DOIs** (they always resolve to the
-  newest version, and OpenAlex uses them as the main DOI of the merged work), searching
-  all OpenAlex corpora (core + expansion — most Zenodo deposits are only in the expansion).
-- Each run counts the community's records per interval (month, quarter, year or all) on
+  newest version, and OpenAlex uses them as the main DOI of the merged work) or, for
+  records without one (older records, records with a publisher DOI), the record's own
+  DOI, searching all OpenAlex corpora (core + expansion — most Zenodo deposits are only in
+  the expansion).
+- Each run counts the community's records per interval (week, month, quarter, year or all) on
   Zenodo and downloads only the intervals that changed. The collection keeps its ID; members are added and removed.
 - The README of your repository shows the last run, the numbers per collection, the last
   change on Zenodo (added / removed deposits) and the collection link.
@@ -34,10 +36,10 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
      collection_name: My Community Zenodo
      from: ~                          # optional date range, see below
      to: ~
-     interval: year                   # month, quarter, year or all
-     recheck:                         # optional thorough check
-       every: month                   # month, quarter or year
+     interval: year                   # week, month, quarter, year or all
+     recheck:                         # optional, see "Data and runs"
        interval: month                # finer than interval
+       per_run: 2                     # rolling: 2 months per run
      access: private                  # private, shared_by_link or public
    ```
 
@@ -56,7 +58,7 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
      contents: write
    jobs:
      update:
-       uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v1
+       uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v2
        with:
          title: My Community OpenAlex Collections
        secrets:
@@ -90,18 +92,29 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
 
   | `interval` | Check (2013 to today) | A change re-downloads | Missed: addition + removal of the same number of versions within the same … |
   |---|---|---|---|
+  | `week` | ~620 requests, ~23 min | that week | week |
   | `month` | ~170 requests, ~6 min | that month | month |
   | `quarter` | ~56 requests, ~2 min | that quarter | quarter |
   | `year` (default) | ~14 requests, ~30 s | that year | year |
   | `all` | 1 request | everything | range |
 
   Use `year` or `all` for small communities that change rarely.
-- **`recheck`** (optional): every `every` (month, quarter or year) the check counts in
-  the finer `recheck: interval` instead, and re-downloads the intervals containing a
-  changed finer interval. This catches changes that cancel out within an interval at
-  the cost of a longer run on those days. The date of the last recheck is kept with the
-  data (`output/<name>/zenodo_recheck.json`), so a failed recheck is repeated on the
-  next run. Without `recheck`, no thorough check is done.
+- **`recheck`** (optional, per entry): counts Zenodo and the cached data in a finer
+  `recheck: interval` and re-downloads every storage interval that overlaps a changed
+  finer interval (a week across a month end marks both months). This catches changes
+  that cancel out within an interval. Two forms, exactly one per entry:
+  - **`per_run: n`** (rolling, recommended): each run rechecks the next `n` finer
+    intervals of the entry in chronological order and starts again at the beginning
+    after the end. The extra cost per run is `n` requests; all finer intervals are
+    covered every (number of finer intervals ÷ `n`) runs. Set larger values for entries
+    that change more often (e.g. the newest range) and small ones for old ranges.
+  - **`every: week|month|quarter|year`** (full, **use with caution**): all finer
+    intervals at once when due, e.g. ~170 requests (~6 min) for a monthly recheck since
+    2013, ~620 (~23 min) for a weekly one, on top of the normal check.
+
+  The state (date, last finer interval checked) is kept with the data
+  (`output/<name>/zenodo_recheck.json`), so a failed recheck is repeated on the next run.
+  Without `recheck`, no thorough check is done.
 - **Full re-download**: Actions → *Update collections* → *Run workflow* → tick
   *Re-download everything from Zenodo* (needs the `full` input from
   [`template/update.yml`](template/update.yml) in your workflow). Scheduled runs never
@@ -150,12 +163,14 @@ the same OpenAlex collection.
 
 ## Versions
 
-Callers reference `@v1`. Changes are developed on `main` and tested locally with
+Callers reference `@v2` (or `@v1`). `v2` adds the interval `week`, the rolling recheck
+(`per_run`) and deposits without a Zenodo concept DOI; every configuration that works with
+`v1` works unchanged with `v2`. Changes are developed on `main` and tested locally with
 `source("tests/run_local_test.R")` (from the repository root; uses the OpenAlex key
 `API_openalex_github_test`) and on GitHub with the manual
 [Test](.github/workflows/test.yml) workflow (a small range in a test collection; keeps no
-data). The `v1` tag is moved to a tested commit to release a change to all callers;
-changes that need something new from callers (e.g. a new config field) get `v2`.
+data). The `v2` tag is moved to a tested commit to release a change to all callers;
+changes that break existing configurations get a new major version (`v3`).
 Reference `@main` to always use the latest code.
 
 ## Citation and license

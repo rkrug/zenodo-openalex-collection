@@ -3,9 +3,9 @@ test:
   zenodo_community: ipbes
   collection_name: ZOC pipeline check
   from: 2026-10-01
-  interval: quarter
-  recheck: # due on every test run (tests keep no data)
-    every: month
-    interval: month
+  interval: month
+  recheck: # rolling; tests keep no data, so every test run starts at the first week
+    interval: week
+    per_run: 2
   to: ~
   access: private

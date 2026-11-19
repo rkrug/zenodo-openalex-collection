@@ -1,14 +1,18 @@
-# Counts the records of each interval (config `interval`: month, quarter, year or all) of
-# the config's range on Zenodo (1 request per interval) and compares them with the cached
-# interval folders. Returns the intervals whose counts differ (0 rows when nothing
+# Counts the records of each interval (config `interval`: week, month, quarter, year or
+# all) of the config's range on Zenodo (1 request per interval) and compares them with the
+# cached interval folders. Returns the intervals whose counts differ (0 rows when nothing
 # changed). Only an addition and a removal with the same number of versions in the same
 # interval go unnoticed.
 #
-# Recheck (config `recheck: {every, interval}`): when due, Zenodo and the cached data are
-# counted in the finer `recheck$interval` instead (cached data grouped by `created`, no
-# extra requests); every changed fine interval marks the storage interval containing it.
-# The date is stored in output/<name>/zenodo_recheck.json (saved with the data only when
-# the run succeeds, so a failed recheck is repeated on the next run).
+# Recheck (config `recheck`, optional), in a finer `recheck: interval`; Zenodo and the
+# cached data (grouped by `created`, no extra requests) are counted per finer interval,
+# and every changed finer interval marks all storage intervals it overlaps:
+# - `per_run: n` (rolling): each run rechecks the next n finer intervals in chronological
+#   order, starting again at the beginning after the end;
+# - `every: week|month|quarter|year` (full, use with caution): all finer intervals at once
+#   when due.
+# The state (date, last finer interval checked) is stored in output/<name>/zenodo_recheck.json
+# and saved with the data only when the run succeeds, so a failed recheck is repeated.
 #
 # Full re-download (env ZOC_FULL = "true", manual runs): all intervals are returned.
 #
@@ -28,21 +32,18 @@ check_zenodo <- function(cfg, dir) {
   old <- zenodo_bucket_counts(dir)
   b$old <- unname(old[b$bucket])
   b$old[is.na(b$old)] <- 0
+  b$new <- count(b)
+  hit <- character()
   if (recheck) {
+    state <- if (file.exists(recheck_file)) jsonlite::read_json(recheck_file) else list()
     fine <- zenodo_buckets(utils::modifyList(cfg, list(interval = cfg$recheck$interval)))
+    fine <- recheck_select(fine, cfg$recheck$per_run, state$last)
     fine$new <- count(fine)
     created <- zenodo_id_table(dir, "created")$created
     cached <- table(zenodo_bucket_label(created, cfg$recheck$interval))
     fine$old <- as.vector(cached[fine$bucket])
     fine$old[is.na(fine$old)] <- 0
-    start <- zenodo_bucket_start(fine$bucket)
-    start[is.na(start)] <- substr(cfg$from %||% "2013-01-01", 1, 10)
-    fine$storage <- zenodo_bucket_label(start, interval)
-    b$new <- vapply(b$bucket, \(x) sum(fine$new[fine$storage == x]), 1)
-    hit <- unique(fine$storage[fine$new != fine$old])
-  } else {
-    b$new <- count(b)
-    hit <- character()
+    hit <- zenodo_overlaps(fine[fine$new != fine$old, ], b)
   }
   gone <- setdiff(names(old), b$bucket)
   if (length(gone)) {
@@ -52,7 +53,8 @@ check_zenodo <- function(cfg, dir) {
   changed <- b[sel, c("bucket", "from", "to", "old", "new")]
   rownames(changed) <- NULL
   mode <- if (full) "full re-download" else if (recheck) {
-    sprintf("recheck by %s", cfg$recheck$interval)
+    sprintf("%s; recheck of %d %s(s) %s to %s", interval, nrow(fine), cfg$recheck$interval,
+            fine$bucket[1], fine$bucket[nrow(fine)])
   } else interval
   message(sprintf("%s: %d intervals checked (%s), %d records on Zenodo, %d to download%s",
                   cfg$zenodo_community, nrow(b) - length(gone), mode, sum(b$new), nrow(changed),
@@ -60,7 +62,8 @@ check_zenodo <- function(cfg, dir) {
                     changed$bucket, changed$old, changed$new))) else ""))
   if (recheck) {
     dir.create(dirname(recheck_file), recursive = TRUE, showWarnings = FALSE)
-    jsonlite::write_json(list(date = as.character(Sys.Date()), interval = cfg$recheck$interval),
+    jsonlite::write_json(list(date = as.character(Sys.Date()), interval = cfg$recheck$interval,
+                              last = fine$bucket[nrow(fine)]),
                          recheck_file, auto_unbox = TRUE, pretty = TRUE)
   }
   changed

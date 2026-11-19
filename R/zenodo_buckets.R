@@ -1,5 +1,6 @@
 # Intervals [from, to) covering the config's range, in the size given by `interval`
-# (default month). NA = open end (from: before Zenodo's launch in 2013, to: until now).
+# (week, month, quarter, year or all). NA = open end (from: before Zenodo's launch in 2013,
+# to: until now).
 zenodo_buckets <- function(cfg) {
   interval <- zenodo_interval(cfg)
   if (interval == "all") {
@@ -10,12 +11,14 @@ zenodo_buckets <- function(cfg) {
   start <- day(cfg$from %||% "2013-01-01")
   end <- day(cfg$to %||% as.character(Sys.Date() + 1))
   first <- switch(interval,
+    week = as.character(start - (as.integer(format(start, "%u")) - 1)),
     month = format(start, "%Y-%m-01"),
     quarter = sprintf("%s-%02d-01", format(start, "%Y"),
                       (as.integer(format(start, "%m")) - 1) %/% 3 * 3 + 1),
     year = format(start, "%Y-01-01")
   )
-  b <- seq(as.Date(first), end, by = c(month = "month", quarter = "3 months", year = "year")[[interval]])
+  step <- c(week = "week", month = "month", quarter = "3 months", year = "year")[[interval]]
+  b <- seq(as.Date(first), end, by = step)
   b <- b[b < end]
   data.frame(
     bucket = zenodo_bucket_label(as.character(b), interval),

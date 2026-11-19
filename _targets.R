@@ -16,15 +16,22 @@ bad <- Filter(\(x) !zenodo_interval(x) %in% zenodo_intervals, cfgs)
 if (length(bad)) {
   stop("interval must be one of ", toString(zenodo_intervals), " in: ", toString(names(bad)))
 }
-# recheck: every = month, quarter or year; interval finer than the entry's interval
+# recheck: an interval finer than the entry's interval, and exactly one of
+# per_run (rolling; a positive whole number) or every (full; week, month, quarter or year)
 rank <- \(x) match(x, zenodo_intervals)
-bad <- Filter(\(x) !is.null(x$recheck) && (
-  !isTRUE(x$recheck$every %in% c("month", "quarter", "year")) ||
-    !isTRUE(x$recheck$interval %in% zenodo_intervals) ||
-    rank(x$recheck$interval) >= rank(zenodo_interval(x))), cfgs)
+recheck_ok <- \(r, entry_interval) {
+  isTRUE(r$interval %in% zenodo_intervals) &&
+    rank(r$interval) < rank(entry_interval) &&
+    xor(is.null(r$every), is.null(r$per_run)) &&
+    (is.null(r$every) || isTRUE(r$every %in% c("week", "month", "quarter", "year"))) &&
+    (is.null(r$per_run) || (is.numeric(r$per_run) && length(r$per_run) == 1 &&
+                              r$per_run >= 1 && r$per_run == round(r$per_run)))
+}
+bad <- Filter(\(x) !is.null(x$recheck) && !recheck_ok(x$recheck, zenodo_interval(x)), cfgs)
 if (length(bad)) {
-  stop("recheck needs every (month, quarter or year) and an interval finer than the ",
-       "entry's interval in: ", toString(names(bad)))
+  stop("recheck needs an interval finer than the entry's interval and either per_run ",
+       "(a positive whole number) or every (week, month, quarter or year), not both, in: ",
+       toString(names(bad)))
 }
 
 mapped <- tar_map(
