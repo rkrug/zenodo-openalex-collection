@@ -8,8 +8,8 @@ that runs in **your** repository.
 - The OpenAlex collection is built from the **concept DOIs** (they always resolve to the
   newest version, and OpenAlex uses them as the main DOI of the merged work), searching
   all OpenAlex corpora (core + expansion — most Zenodo deposits are only in the expansion).
-- Each run counts the community's records per month on Zenodo and downloads only the
-  months that changed. The collection keeps its ID; members are added and removed.
+- Each run counts the community's records per interval (month, quarter, year or all) on
+  Zenodo and downloads only the intervals that changed. The collection keeps its ID; members are added and removed.
 - The README of your repository shows the last run, the numbers per collection, the last
   change on Zenodo (added / removed deposits) and the collection link.
 
@@ -32,6 +32,7 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
      collection_name: My Community Zenodo
      from: ~                          # optional date range, see below
      to: ~
+     interval: month                  # month, quarter, year or all
      access: private                  # private, shared_by_link or public
    ```
 
@@ -77,8 +78,20 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
   repository, not in git. Each run restores the newest one and publishes a new one only
   when `output/` changed; the 3 newest are kept.
 - **Zenodo allows 30 search requests per minute** (also with a token). The pipeline
-  spaces requests at 2.2 s. The daily check costs one request per month of the range
-  (2013 to today: ~170 requests, ~6 min). A changed month adds ~2 requests per 100 records.
+  spaces requests at 2.2 s.
+- **`interval`** sets the size of the intervals that are counted every run and
+  re-downloaded when their count changed:
+
+  | `interval` | Check (2013 to today) | A change re-downloads | Missed: addition + removal of the same number of versions within the same … |
+  |---|---|---|---|
+  | `month` (default) | ~170 requests, ~6 min | that month | month |
+  | `quarter` | ~56 requests, ~2 min | that quarter | quarter |
+  | `year` | ~14 requests, ~30 s | that year | year |
+  | `all` | 1 request | everything | range |
+
+  Use `year` or `all` for small communities that change rarely. Consecutive changed
+  intervals are downloaded together (up to 10,000 records per query), at 100 records per
+  request. Changing `interval` later re-downloads everything once.
 - **OpenAlex**: building the collection costs about one credit per 200 found works.
 
 ## Large communities

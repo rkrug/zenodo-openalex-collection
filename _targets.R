@@ -12,6 +12,10 @@ dup <- \(x) unique(x[duplicated(x)])
 coll <- vapply(cfgs, \(x) x$collection_name %||% NA_character_, "")
 if (anyNA(coll)) stop("Missing collection_name in: ", toString(names(cfgs)[is.na(coll)]))
 if (length(d <- dup(coll))) stop("Duplicate collection_name: ", toString(d))
+bad <- Filter(\(x) !(x$interval %||% "month") %in% zenodo_intervals, cfgs)
+if (length(bad)) {
+  stop("interval must be one of ", toString(zenodo_intervals), " in: ", toString(names(bad)))
+}
 
 mapped <- tar_map(
   unlist = FALSE,
