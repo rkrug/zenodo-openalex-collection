@@ -1,7 +1,7 @@
 # Reusable workflow: runs the pipeline in the CALLING repo (its config.yml, secrets,
 # data releases and README). The R code is taken from this repo at the version the
 # caller references (@v1, @main, ...).
-name: Zenodo community to OpenAlex collection
+name: "Reusable: Zenodo community to OpenAlex collection"
 
 on:
   workflow_call:
