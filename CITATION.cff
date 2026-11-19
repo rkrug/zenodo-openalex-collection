@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "zenodo-openalex-collection: keep an OpenAlex collection of a Zenodo community up to date"
+abstract: >-
+  A reusable GitHub workflow and R pipeline (targets) that keeps an OpenAlex
+  collection of the deposits in a Zenodo community up to date, using openalexPro.
+authors:
+  - family-names: Krug
+    given-names: Rainer M.
+    orcid: "https://orcid.org/0000-0002-7490-0066"
+    affiliation: SIB Swiss Institute of Bioinformatics
+version: 1.0.0
+date-released: 2026-11-19
+license: MIT
+repository-code: "https://github.com/rkrug/zenodo-openalex-collection"
+keywords:
+  - Zenodo
+  - OpenAlex
+  - collections
+  - GitHub Actions
+  - R
+  - targets
+references:
+  - type: software
+    title: "openalexPro: Providing a more advanced access to OpenAlex for the power user"
+    authors:
+      - family-names: Krug
+        given-names: Rainer M.
+        orcid: "https://orcid.org/0000-0002-7490-0066"
+    doi: 10.5281/zenodo.17453180

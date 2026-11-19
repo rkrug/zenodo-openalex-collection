@@ -155,3 +155,8 @@ Callers reference `@v1`. Changes are developed on `main` and tested locally with
 data). The `v1` tag is moved to a tested commit to release a change to all callers;
 changes that need something new from callers (e.g. a new config field) get `v2`.
 Reference `@main` to always use the latest code.
+
+## Citation and license
+
+Please cite this software as given in [CITATION.cff](CITATION.cff) (GitHub: *Cite this
+repository*). Releases are archived on Zenodo. Licensed under the [MIT License](LICENSE).
