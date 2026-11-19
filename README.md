@@ -1,5 +1,7 @@
 # zenodo-openalex-collection
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24370578.svg)](https://doi.org/10.5281/zenodo.24370578)
+
 Keeps an [OpenAlex collection](https://openalex.org) of the deposits in a
 [Zenodo community](https://zenodo.org/communities) up to date, using a GitHub Action
 that runs in **your** repository.
@@ -159,4 +161,6 @@ Reference `@main` to always use the latest code.
 ## Citation and license
 
 Please cite this software as given in [CITATION.cff](CITATION.cff) (GitHub: *Cite this
-repository*). Releases are archived on Zenodo. Licensed under the [MIT License](LICENSE).
+repository*). Releases are archived on Zenodo:
+[10.5281/zenodo.24370578](https://doi.org/10.5281/zenodo.24370578) (all versions; resolves
+to the newest). Licensed under the [MIT License](LICENSE).
