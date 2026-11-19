@@ -53,10 +53,13 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
        uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v1
        with:
          title: My Community OpenAlex Collections
-       secrets: inherit
+       secrets:
+         API_ZENODO_RO: ${{ secrets.API_ZENODO_RO }}
+         API_OPENALEX_PERSONAL: ${{ secrets.API_OPENALEX_PERSONAL }}
    ```
 
-   Optional inputs: `config` (default `config.yml`), `title`, `readme` (default `README.md`).
+   The secrets must be passed explicitly: `secrets: inherit` only works within the same
+   organisation. Optional inputs: `config` (default `config.yml`), `title`, `readme` (default `README.md`).
 
 4. **Add two repository secrets** (Settings → Secrets and variables → Actions):
 

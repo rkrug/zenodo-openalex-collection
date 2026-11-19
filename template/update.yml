@@ -14,4 +14,6 @@ jobs:
     uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v1
     with:
       title: My Community OpenAlex Collections
-    secrets: inherit
+    secrets:
+      API_ZENODO_RO: ${{ secrets.API_ZENODO_RO }}
+      API_OPENALEX_PERSONAL: ${{ secrets.API_OPENALEX_PERSONAL }}
