@@ -1,0 +1,16 @@
+# One entry per collection. The entry name is used for the target names and the
+# folder output/<name>/.
+#
+# zenodo_community: the community's identifier (zenodo.org/communities/<identifier>)
+# collection_name:  name of the OpenAlex collection (unique in your OpenAlex account)
+# from / to:        optional range of the Zenodo creation date, [from, to).
+#                   ~ or left out = from the beginning / until now.
+#                   Keep each range below 300,000 deposits, so the collection can be
+#                   used as a filter in OpenAlex.
+# access:           private (default), shared_by_link or public
+my-community:
+  zenodo_community: my-community
+  collection_name: My Community Zenodo
+  from: ~
+  to: ~
+  access: private

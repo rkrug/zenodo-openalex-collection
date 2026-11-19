@@ -1,0 +1,127 @@
+# Reusable workflow: runs the pipeline in the CALLING repo (its config.yml, secrets,
+# data releases and README). The R code is taken from this repo at the version the
+# caller references (@v1, @main, ...).
+name: Zenodo community to OpenAlex collection
+
+on:
+  workflow_call:
+    inputs:
+      config:
+        description: Config file in the calling repo
+        type: string
+        default: config.yml
+      title:
+        description: Title of the generated README
+        type: string
+        default: OpenAlex Collections
+      readme:
+        description: File name of the generated README
+        type: string
+        default: README.md
+      persist:
+        description: Restore/save data releases and commit the README (false for tests)
+        type: boolean
+        default: true
+    secrets:
+      API_ZENODO_RO:
+        required: true
+      API_OPENALEX_PERSONAL:
+        required: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: zenodo-openalex-collection-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      API_zenodo_ro: ${{ secrets.API_ZENODO_RO }}
+      API_openalex_personal: ${{ secrets.API_OPENALEX_PERSONAL }}
+      GH_TOKEN: ${{ github.token }}
+      ZOC_CODE_DIR: .collection-code
+      ZOC_CONFIG: ${{ inputs.config }}
+      ZOC_TITLE: ${{ inputs.title }}
+      ZOC_README: ${{ inputs.readme }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the pipeline code
+        uses: actions/checkout@v4
+        with:
+          repository: rkrug/zenodo-openalex-collection
+          ref: ${{ github.job_workflow_sha }}
+          path: .collection-code
+
+      # output/ and _targets/ live in the newest published data-* release, not in git.
+      - name: Restore data from latest release
+        if: inputs.persist
+        run: |
+          tag=$(gh release list --exclude-drafts --limit 100 --json tagName -q '.[].tagName' | grep '^data-' | sort -r | head -n 1 || true)
+          if [ -n "$tag" ]; then
+            echo "Restoring $tag"
+            gh release download "$tag" --dir restore
+            for f in restore/*.tar.gz; do tar -xzf "$f"; done
+            # macOS metadata files from locally made archives
+            find output _targets -name '._*' -delete 2>/dev/null || true
+          else
+            echo "No data release found, starting from scratch"
+          fi
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+          extra-repositories: https://openalexpro.r-universe.dev
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::targets
+            any::tarchetypes
+            any::yaml
+            any::httr2
+            any::arrow
+            any::dplyr
+            any::jsonlite
+            openalexPro
+
+      - name: Run pipeline
+        run: Rscript -e 'targets::tar_make(script = file.path(Sys.getenv("ZOC_CODE_DIR"), "_targets.R"))'
+
+      - name: Show README
+        run: cat "$ZOC_README"
+
+      # Only reached when the pipeline succeeded. New release only when output/ changed.
+      # Created as draft and published after all uploads succeeded, so restore never
+      # picks up an incomplete release. The 3 newest data releases are kept.
+      - name: Save data to a new release
+        if: inputs.persist
+        run: |
+          find output -type f -print0 | sort -z | xargs -0 sha256sum > MANIFEST.sha256
+          if [ -f restore/MANIFEST.sha256 ] && cmp -s MANIFEST.sha256 restore/MANIFEST.sha256; then
+            echo "output/ unchanged, no new release"
+            exit 0
+          fi
+          tag="data-$(date -u +%Y%m%d-%H%M%S)"
+          mkdir upload
+          for d in output/*/; do
+            n=$(basename "$d")
+            tar -czf "upload/output_$n.tar.gz" "output/$n"
+          done
+          tar -czf upload/targets.tar.gz _targets
+          cp MANIFEST.sha256 upload/
+          gh release create "$tag" --draft --latest=false --title "$tag" \
+            --notes "Pipeline data (output/ and _targets/). Restored by the next run." upload/*
+          gh release edit "$tag" --draft=false --latest=false
+          gh release list --exclude-drafts --limit 100 --json tagName -q '.[].tagName' | grep '^data-' | sort -r \
+            | tail -n +4 | xargs -r -I{} gh release delete {} --yes --cleanup-tag
+
+      - name: Commit README
+        if: inputs.persist
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$ZOC_README"
+          git diff --cached --quiet || git commit -m "Update README $(date -u +%Y-%m-%d)"
+          git push

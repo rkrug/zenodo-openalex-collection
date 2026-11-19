@@ -1,0 +1,5 @@
+# Small test range: a few dozen records, two months to check.
+test:
+  zenodo_community: ipbes
+  collection_name: ZOC pipeline check
+  from: 2026-10-01

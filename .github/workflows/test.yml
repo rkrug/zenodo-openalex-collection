@@ -1,0 +1,16 @@
+# Manual test of the pipeline at the current commit, on a small range (test/config.yml).
+# Keeps nothing: no data releases, no README commit. Needs the two secrets in this repo.
+name: Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/collection.yml
+    with:
+      config: test/config.yml
+      title: Test
+      readme: README.test.md
+      persist: false
+    secrets: inherit

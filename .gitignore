@@ -1,0 +1,12 @@
+_targets/
+output/
+restore/
+upload/
+MANIFEST.sha256
+.collection-code/
+.github/pkg.lock
+README.test.md
+.Rhistory
+.RData
+.Rproj.user/
+.DS_Store

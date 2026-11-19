@@ -1,0 +1,17 @@
+# Copy to .github/workflows/update.yml in your community repo.
+name: Update collections
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # daily 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    uses: rkrug/zenodo-openalex-collection/.github/workflows/collection.yml@v1
+    with:
+      title: My Community OpenAlex Collections
+    secrets: inherit
