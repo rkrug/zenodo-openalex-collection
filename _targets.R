@@ -33,6 +33,11 @@ if (length(bad)) {
        "(a positive whole number) or every (week, month, quarter or year), not both, in: ",
        toString(names(bad)))
 }
+bad <- Filter(\(x) !is.null(x$select) && !(is.character(x$select) && length(x$select) &&
+                                             !anyNA(x$select) && all(nzchar(x$select))), cfgs)
+if (length(bad)) {
+  stop("select must be \"id\", \"all\" or a list of OpenAlex fields, in: ", toString(names(bad)))
+}
 
 mapped <- tar_map(
   unlist = FALSE,

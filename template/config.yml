@@ -22,6 +22,9 @@
 #                   every: week|month|quarter|year  all finer intervals at once when due
 #                               (use with caution: long runs on those days)
 #                   The state is kept with the data, so a failed recheck is repeated.
+# select:           what to download from OpenAlex for the members (optional):
+#                   [id, doi] (default), id, all (full records), or a list of fields
+#                   (openalexPro::opt_select_fields()). Changing it downloads the records again.
 # access:           private (default), shared_by_link. public not yet supported and 
 #                   has to be done by OpenAlex
 my-community:
@@ -36,4 +39,5 @@ my-community:
     per_run: 2      # rolling: 2 months per run, in chronological order (recommended)
     # every: month  # full: all months at once every week|month|quarter|year
     #               # (use with caution: long runs on those days)
+  # select: [id, doi, title, publication_year]  # optional, default [id, doi]
   access: private   # private, shared_by_link. public not yet supported and has to be done by OpenAlex

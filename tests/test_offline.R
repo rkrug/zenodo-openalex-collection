@@ -166,6 +166,10 @@ stopifnot(
   validate(entry("collection_name: A")),
   validate(entry("collection_name: A", "interval: month", "recheck:", "  interval: week", "  per_run: 2")),
   validate(entry("collection_name: A", "interval: year", "recheck:", "  interval: month", "  every: month")),
+  validate(entry("collection_name: A", "select: [id, doi, title]")),
+  validate(entry("collection_name: A", "select: all")),
+  !validate(entry("collection_name: A", "select: 3")),
+  !validate(entry("collection_name: A", "select: ['']")),
   !validate(entry("interval: month")), # no collection_name
   !validate(c(entry("collection_name: A"), "b:", "  zenodo_community: y", "  collection_name: A")),
   !validate(entry("collection_name: A", "interval: day")),
