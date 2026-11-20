@@ -8,9 +8,12 @@ create_collection <- function(cfg, ids_dir, folder) {
   z <- zenodo_id_table(ids_dir, c("conceptdoi", "doi", "version_index"))
   z <- z[is.na(z$version_index) | z$version_index == 0, ]
   deposits <- unique(zenodo_deposit(z$conceptdoi, z$doi))
+  deposits <- deposits[!is.na(deposits) & deposits != ""]
+  # an empty DOI filter would match all of OpenAlex
+  if (!length(deposits)) stop("No Zenodo deposits in ", ids_dir, "; not creating the collection.")
   # corpus = "all": core + expansion. Most Zenodo deposits are only in the expansion.
   q <- pro_query(
-    doi = sort(deposits[!is.na(deposits) & deposits != ""]),
+    doi = sort(deposits),
     chunk_limit = 500,
     options = list(corpus = "all")
   )

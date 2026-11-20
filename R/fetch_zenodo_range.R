@@ -8,7 +8,10 @@ fetch_zenodo_range <- function(cfg, dir, from = NULL, to = NULL, limit = 10000, 
   q <- zenodo_query(from, to)
   n <- n %||% zenodo_count(cfg, q)
   if (n >= limit) {
-    t <- function(x, default) as.POSIXct(x %||% default, tz = "UTC")
+    # explicit formats: as.POSIXct() silently drops the time of "YYYY-MM-DDThh:mm:ss"
+    t <- function(x, default) {
+      as.POSIXct(x %||% default, tz = "UTC", tryFormats = c("%Y-%m-%dT%H:%M:%OS", "%Y-%m-%d"))
+    }
     lo <- t(from, "2013-01-01") # Zenodo launch
     hi <- t(to, as.character(Sys.Date() + 1))
     if (difftime(hi, lo, units = "secs") < 1) stop("10,000+ records within one second: ", q)
