@@ -40,7 +40,7 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
      recheck:                         # optional, see "Data and runs"
        interval: month                # finer than interval
        per_run: 2                     # rolling: 2 months per run
-     select: [id, doi]                # optional: OpenAlex fields to download, "all" or id
+     openalex_select: [id, doi]       # optional: OpenAlex fields to download, "all" or id
      access: private                  # private, shared_by_link or public
    ```
 

@@ -19,7 +19,7 @@ create_collection <- function(cfg, ids_dir, folder) {
   )
   pro_collection(
     q,
-    select = cfg$select %||% c("id", "doi"), # config `select`: "id", "all" or fields
+    select = cfg$openalex_select %||% c("id", "doi"), # config `openalex_select`: "id", "all" or fields
     refresh = TRUE,
     name = cfg$collection_name,
     project_folder = folder,
