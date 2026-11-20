@@ -40,6 +40,7 @@ Example: [IPBES-Data/IPBES_OpenAlex_Collection](https://github.com/IPBES-Data/IP
      recheck:                         # optional, see "Data and runs"
        interval: month                # finer than interval
        per_run: 2                     # rolling: 2 months per run
+     openalex_select: [id, doi]       # optional: OpenAlex fields to download, "all" or id
      access: private                  # private, shared_by_link or public
    ```
 
@@ -165,7 +166,11 @@ the same OpenAlex collection.
 
 Callers reference `@v2` (or `@v1`). `v2` adds the interval `week`, the rolling recheck
 (`per_run`) and deposits without a Zenodo concept DOI; every configuration that works with
-`v1` works unchanged with `v2`. Changes are developed on `main` and tested locally with
+`v1` works unchanged with `v2`. Changes are developed on `dev` and merged into `main` by
+pull request. The offline checks (`Rscript tests/test_offline.R`: interval logic, range
+splitting against a fake Zenodo, config validation; no network or keys) run as the
+[Check](.github/workflows/check.yml) workflow on every push and pull request and must pass
+before merging. The whole pipeline is tested locally with
 `source("tests/run_local_test.R")` (from the repository root; uses the OpenAlex key
 `API_openalex_github_test`) and on GitHub with the manual
 [Test](.github/workflows/test.yml) workflow (a small range in a test collection; keeps no
